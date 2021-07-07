@@ -33,7 +33,7 @@ model.add(layers.Dense(64, input_dim=64,
 model.add(layers.Dense(10,
         kernel_regularizer=regularizers.l1_l2(0.01,0.01),activation = "sigmoid"))
 model.compile(optimizer = "rmsprop",
-        loss = "sparse_categorical_crossentropy",metrics = ["AUC"])
+        loss = "binary_crossentropy",metrics = ["AUC"])
 model.summary()
 
 ```
@@ -96,50 +96,64 @@ _________________________________________________________________
 
 下面是一个Focal Loss的自定义实现示范。Focal Loss是一种对binary_crossentropy的改进损失函数形式。
 
-在类别不平衡和存在难以训练样本的情形下相对于二元交叉熵能够取得更好的效果。
+它在样本不均衡和存在较多易分类的样本时相比binary_crossentropy具有明显的优势。
 
-详见《如何评价Kaiming的Focal Loss for Dense Object Detection？》
+它有两个可调参数，alpha参数和gamma参数。其中alpha参数主要用于衰减负样本的权重，gamma参数主要用于衰减容易训练样本的权重。
 
-https://www.zhihu.com/question/63581984
+从而让模型更加聚焦在正样本和困难样本上。这就是为什么这个损失函数叫做Focal Loss。
+
+详见《5分钟理解Focal Loss与GHM——解决样本不平衡利器》
+
+https://zhuanlan.zhihu.com/p/80594704
+
+
+$$focal\_loss(y,p) = \begin{cases}
+-\alpha  (1-p)^{\gamma}\log(p) &
+\text{if y = 1}\\
+-(1-\alpha) p^{\gamma}\log(1-p) &
+\text{if y = 0}
+\end{cases} $$
 
 ```python
-def focal_loss(gamma=2., alpha=0.25):
+def focal_loss(gamma=2., alpha=0.75):
     
     def focal_loss_fixed(y_true, y_pred):
-        pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
-        pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
-        loss = -tf.reduce_sum(alpha * tf.pow(1. - pt_1, gamma) * tf.log(1e-07+pt_1)) \
-           -tf.reduce_sum((1-alpha) * tf.pow( pt_0, gamma) * tf.log(1. - pt_0 + 1e-07))
+        bce = tf.losses.binary_crossentropy(y_true, y_pred)
+        p_t = (y_true * y_pred) + ((1 - y_true) * (1 - y_pred))
+        alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)
+        modulating_factor = tf.pow(1.0 - p_t, gamma)
+        loss = tf.reduce_sum(alpha_factor * modulating_factor * bce,axis = -1 )
         return loss
     return focal_loss_fixed
 
 ```
 
 ```python
-class FocalLoss(losses.Loss):
+class FocalLoss(tf.keras.losses.Loss):
     
-    def __init__(self,gamma=2.0,alpha=0.25):
+    def __init__(self,gamma=2.0,alpha=0.75,name = "focal_loss"):
         self.gamma = gamma
         self.alpha = alpha
 
     def call(self,y_true,y_pred):
-        
-        pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
-        pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
-        loss = -tf.reduce_sum(self.alpha * tf.pow(1. - pt_1, self.gamma) * tf.log(1e-07+pt_1)) \
-           -tf.reduce_sum((1-self.alpha) * tf.pow( pt_0, self.gamma) * tf.log(1. - pt_0 + 1e-07))
+        bce = tf.losses.binary_crossentropy(y_true, y_pred)
+        p_t = (y_true * y_pred) + ((1 - y_true) * (1 - y_pred))
+        alpha_factor = y_true * self.alpha + (1 - y_true) * (1 - self.alpha)
+        modulating_factor = tf.pow(1.0 - p_t, self.gamma)
+        loss = tf.reduce_sum(alpha_factor * modulating_factor * bce,axis = -1 )
         return loss
+
 ```
 
 ```python
 
 ```
 
-如果对本书内容理解上有需要进一步和作者交流的地方，欢迎在公众号"Python与算法之美"下留言。作者时间和精力有限，会酌情予以回复。
+如果对本书内容理解上有需要进一步和作者交流的地方，欢迎在公众号"算法美食屋"下留言。作者时间和精力有限，会酌情予以回复。
 
 也可以在公众号后台回复关键字：**加群**，加入读者交流群和大家讨论。
 
-![image.png](./data/Python与算法之美logo.jpg)
+![算法美食屋二维码.jpg](./data/算法美食屋二维码.jpg)
 
 ```python
 
