@@ -38,7 +38,8 @@ from tensorflow.keras import *
 #打印时间分割线
 @tf.function
 def printbar():
-    today_ts = tf.timestamp()%(24*60*60)
+    ts = tf.timestamp()
+    today_ts = ts%(24*60*60)
 
     hour = tf.cast(today_ts//3600+8,tf.int32)%tf.constant(24)
     minite = tf.cast((today_ts%3600)//60,tf.int32)
@@ -52,7 +53,8 @@ def printbar():
     
     timestring = tf.strings.join([timeformat(hour),timeformat(minite),
                 timeformat(second)],separator = ":")
-    tf.print("=========="*8+timestring)
+    tf.print("=========="*8,end = "")
+    tf.print(timestring)
     
 ```
 
@@ -284,8 +286,8 @@ Epoch=10,Loss:0.263130337,Accuracy:0.936651051,Valid Loss:3.09705234,Valid Accur
 
 ```
 
-如果对本书内容理解上有需要进一步和作者交流的地方，欢迎在公众号"算法美食屋"下留言。作者时间和精力有限，会酌情予以回复。
+如果对本书内容理解上有需要进一步和作者交流的地方，欢迎在公众号"Python与算法之美"下留言。作者时间和精力有限，会酌情予以回复。
 
 也可以在公众号后台回复关键字：**加群**，加入读者交流群和大家讨论。
 
-![算法美食屋二维码.jpg](./data/算法美食屋二维码.jpg)
+![image.png](./data/Python与算法之美logo.jpg)

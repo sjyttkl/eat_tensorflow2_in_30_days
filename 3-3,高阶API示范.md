@@ -327,6 +327,7 @@ def valid_step(model, features, labels):
     valid_metric.update_state(labels, predictions)
     
 
+@tf.function
 def train_model(model,ds_train,ds_valid,epochs):
     for epoch in tf.range(1,epochs+1):
         for features, labels in ds_train:
@@ -400,8 +401,8 @@ ax2.set_title("y_pred");
 
 ```
 
-如果对本书内容理解上有需要进一步和作者交流的地方，欢迎在公众号"算法美食屋"下留言。作者时间和精力有限，会酌情予以回复。
+如果对本书内容理解上有需要进一步和作者交流的地方，欢迎在公众号"Python与算法之美"下留言。作者时间和精力有限，会酌情予以回复。
 
 也可以在公众号后台回复关键字：**加群**，加入读者交流群和大家讨论。
 
-![算法美食屋二维码.jpg](./data/算法美食屋二维码.jpg)
+![image.png](./data/Python与算法之美logo.jpg)
